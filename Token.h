@@ -3,14 +3,11 @@
 //
 
 #pragma once
+
 #include <cstdint>
 #include <string>
 #include <variant>
 #include <iostream>
-
-// fn main() {
-//     return 228 + 322;
-// }
 
 namespace token {
     enum class Keyword {
@@ -26,6 +23,11 @@ namespace token {
     struct Integer {
         int64_t value;
         auto operator<=>(const Integer &) const = default;
+    };
+
+    struct String {
+        std::string value;
+        auto operator<=>(const String &) const = default;
     };
 
     struct LPar {
@@ -48,6 +50,10 @@ namespace token {
         auto operator<=>(const Plus &) const = default;
     };
 
+    struct Assign {
+        auto operator<=>(const Assign &) const = default;
+    };
+
     struct Semicolon {
         auto operator<=>(const Semicolon &) const = default;
     };
@@ -56,7 +62,7 @@ namespace token {
         auto operator<=>(const Comma &) const = default;
     };
 
-    using Any = std::variant<Keyword, Identifier, Integer, LBracket, RBracket, LPar, RPar, Plus, Semicolon, Comma>;
+    using Any = std::variant<Keyword, Identifier, Integer, LBracket, RBracket, LPar, RPar, Plus, Semicolon, Comma, String, Assign>;
 
     inline std::ostream& operator<<(std::ostream& os, const token::LPar&) {
         return os << "'('";
@@ -96,6 +102,10 @@ namespace token {
             case token::Keyword::RETURN: return os << "Keyword(RETURN)";
             default:                     return os << "Keyword(?)";
         }
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, token::String s) {
+        return os << s.value;
     }
 
     inline std::ostream& operator<<(std::ostream& os, const token::Identifier& id) {

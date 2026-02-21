@@ -41,6 +41,34 @@ std::vector<token::Any> Lexer::tokenize() {
             case ',':
                 result.emplace_back(token::Comma{});
                 break;
+            case '=':
+                result.emplace_back(token::Assign{});
+                break;
+                case '"': {
+                    std::string str;
+                    ++it;
+                    while (it != code.end() && *it != '"') {
+                        if (*it == '\\') {
+                            ++it;
+                            if (it == code.end()) break;
+                            switch (*it) {
+                                case 'n': str += '\n'; break;
+                                case 't': str += '\t'; break;
+                                case '\\': str += '\\'; break;
+                                case '"': str += '"'; break;
+                                default: str += '\\'; str += *it; break;
+                            }
+                        } else {
+                            str += *it;
+                        }
+                        ++it;
+                    }
+                    if (it == code.end() || *it != '"') {
+                        throw std::domain_error("Unterminated string literal");
+                    }
+                    result.emplace_back(token::String{str});
+                    break;
+                }
             default:
                 if (std::isdigit(*it)) {
                     std::string int_buff{};
@@ -60,9 +88,9 @@ std::vector<token::Any> Lexer::tokenize() {
                         ++it;
                     }
                     static std::map<std::string_view, token::Keyword> keywords{
-                        {"func", token::Keyword::FUNC},
-                        {"return", token::Keyword::RETURN},
-                    };
+                                {"func", token::Keyword::FUNC},
+                                {"return", token::Keyword::RETURN},
+                            };
 
                     if (auto keyword = keywords.find(word); keyword != keywords.end()) {
                         result.emplace_back(keyword->second);
@@ -76,6 +104,7 @@ std::vector<token::Any> Lexer::tokenize() {
                 throw std::domain_error(std::string{"Unexpected character: " } + std::string{*it} + std::string{" at line: " + std::to_string(line)});
         }
     }
-
     return result;
 }
+
+

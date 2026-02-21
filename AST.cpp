@@ -9,6 +9,9 @@ namespace ast {
     // Integer
     Integer::Integer(int64_t v) : value(v) {}
 
+    // String
+    StringLiteral::StringLiteral(std::string v) : value(std::move(v)) {}
+
     // Identifier
     Identifier::Identifier(std::string n) : name(std::move(n)) {}
 
@@ -16,6 +19,7 @@ namespace ast {
     BinaryOp::BinaryOp(Op o, std::unique_ptr<Expression> l, std::unique_ptr<Expression> r)
         : op(o), left(std::move(l)), right(std::move(r)) {}
 
+    // CallExpr
     CallExpr::CallExpr(std::string c, std::vector<std::unique_ptr<Expression>> a)
     : callee(std::move(c)), arguments(std::move(a)) {}
 
@@ -27,8 +31,12 @@ namespace ast {
     ExpressionStatement::ExpressionStatement(std::unique_ptr<Expression> e)
         : expr(std::move(e)) {}
 
+    // AssignStatement
+    AssignStmt::AssignStmt(std::string n, std::unique_ptr<Expression> v)
+    : name(std::move(n)), value(std::move(v)) {}
+
     // Function
-    Function::Function(std::string n, std::vector<std::unique_ptr<Statement>> b)
-        : name(std::move(n)), body(std::move(b)) {}
+    Function::Function(std::string n, std::vector<std::string> p, std::vector<std::unique_ptr<Statement>> b)
+        : name(std::move(n)), params(std::move(p)), body(std::move(b)) {}
 
 } // namespace ast

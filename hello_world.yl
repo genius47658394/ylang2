@@ -1,3 +1,17 @@
+func add(a, b) {
+    return a + b;
+}
+
 func main() {
-    println(to_int(input()) + to_int(input()));
+    println("Enter first variable: ");
+
+    x = to_int(input());
+
+    println("Enter second variable: ");
+
+    y = to_int(input());
+
+    z = add(x, y);
+
+    println("Answer: ", z);
 }
