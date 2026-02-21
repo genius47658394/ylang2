@@ -88,7 +88,7 @@ std::vector<token::Any> Lexer::tokenize() {
                         ++it;
                     }
                     static std::map<std::string_view, token::Keyword> keywords{
-                                {"func", token::Keyword::FN},
+                                {"fn", token::Keyword::FN},
                                 {"return", token::Keyword::RETURN},
                             };
 

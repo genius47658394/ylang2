@@ -57,7 +57,7 @@ std::unique_ptr<ast::Program> Parser::parse() {
 }
 
 std::unique_ptr<ast::Function> Parser::parseFunction() {
-    auto nameToken = consume<token::Identifier>("Expected function name after 'func'");
+    auto nameToken = consume<token::Identifier>("Expected function name after 'fn'");
     std::string funcName = nameToken.value;
 
     consume<token::LPar>("Expected '(' after function name");
@@ -160,7 +160,6 @@ std::unique_ptr<ast::Expression> Parser::parseTerm() {
     }
 
     error("Expected expression (integer, identifier, or '(')");
-    return nullptr;
 }
 
 std::unique_ptr<ast::CallExpr> Parser::parseCall(const std::string& callee) {
