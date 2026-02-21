@@ -46,7 +46,7 @@ std::unique_ptr<ast::Program> Parser::parse() {
     auto program = std::make_unique<ast::Program>();
 
     while (!isAtEnd()) {
-        if (match(token::Keyword::FUNC)) {
+        if (match(token::Keyword::FN)) {
             program->functions.push_back(parseFunction());
         } else {
             error("Expected function definition");

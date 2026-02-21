@@ -24,7 +24,7 @@ void Interpreter::visit(ast::Program* prog) {
         globals[func->name] = uf;
     }
 
-    // Поиск и вызов main
+    // call main
     auto it = globals.find("main");
     if (it == globals.end()) {
         runtimeError("No 'main' function found");
@@ -33,7 +33,7 @@ void Interpreter::visit(ast::Program* prog) {
         runtimeError("main is not a function");
     }
     UserFunction mainFunc = std::any_cast<UserFunction>(it->second);
-    callUserFunction(mainFunc, {});   // вызов без аргументов
+    callUserFunction(mainFunc, {});   // void
 }
 
 void Interpreter::visit(ast::Statement* stmt) {
@@ -41,7 +41,7 @@ void Interpreter::visit(ast::Statement* stmt) {
         visitReturn(returnStmt);
     } else if (auto* exprStmt = dynamic_cast<ast::ExpressionStatement*>(stmt)) {
         visitExpressionStmt(exprStmt);
-    } else if (auto* assignStmt = dynamic_cast<ast::AssignStmt*>(stmt)) {  // новый
+    } else if (auto* assignStmt = dynamic_cast<ast::AssignStmt*>(stmt)) {  // new
         visitAssign(assignStmt);
     } else {
         runtimeError("Unknown statement type");
@@ -58,8 +58,8 @@ void Interpreter::visitReturn(ast::ReturnStatement* node) {
 
 void Interpreter::visitExpressionStmt(ast::ExpressionStatement* node) {
     Value val = visit(node->expr.get());
-    // Можно игнорировать или выводить для отладки
-    // Например, если это не void, можно напечатать
+    // Can be ignored or used for degug
+    // Example if it not void can be written
     if (val.has_value()) {
         if (val.type() == typeid(int64_t)) {
             //std::cout << std::any_cast<int64_t>(val) << std::endl;
@@ -84,7 +84,6 @@ Interpreter::Value Interpreter::visit(ast::Expression* expr) {
         return visitCall(callNode);
     }
     runtimeError("Unknown expression type");
-    return {};
 }
 
 Interpreter::Value Interpreter::visitInteger(ast::Integer* node) {
@@ -103,17 +102,14 @@ Interpreter::Value Interpreter::visitBinaryOp(ast::BinaryOp* node) {
         runtimeError("Unknown binary operator");
     }
 
-    // Строка + строка
     if (left.type() == typeid(std::string) && right.type() == typeid(std::string)) {
         return Value{std::any_cast<std::string>(left) + std::any_cast<std::string>(right)};
     }
-    // Число + число
     if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t)) {
         return Value{std::any_cast<int64_t>(left) + std::any_cast<int64_t>(right)};
     }
 
     runtimeError("Binary '+' only supported for (int, int) or (string, string)");
-    return {};
 }
 
 Interpreter::Value Interpreter::visitString(ast::StringLiteral* node) {
@@ -131,7 +127,6 @@ Interpreter::Value Interpreter::visitCall(ast::CallExpr* node) {
         runtimeError("Undefined function: " + node->callee);
     }
 
-    // Вычисляем аргументы
     std::vector<Value> args;
     for (auto& arg : node->arguments) {
         args.push_back(visit(arg.get()));
@@ -146,11 +141,9 @@ Interpreter::Value Interpreter::visitCall(ast::CallExpr* node) {
         return callUserFunction(uf, args);
     }
     runtimeError("Not a callable: " + node->callee);
-    return {};
 }
 
 Interpreter::Value Interpreter::callUserFunction(UserFunction& uf, const std::vector<Value>& args) {
-    // Создаём новое локальное окружение
     Environment newEnv;
 
     if (args.size() != uf.func->params.size()) {
@@ -168,7 +161,6 @@ Interpreter::Value Interpreter::callUserFunction(UserFunction& uf, const std::ve
         for (auto& stmt : uf.func->body) {
             visit(stmt.get());
         }
-        // если функция завершилась без return, возвращаем "пустое" значение
         result = Value{};
     } catch (ReturnException& e) {
         result = e.value;
@@ -179,7 +171,7 @@ Interpreter::Value Interpreter::callUserFunction(UserFunction& uf, const std::ve
 }
 
 Interpreter::Value Interpreter::getVariable(const std::string& name) {
-    // ищем в стеке локальных окружений (от вершины к основанию)
+    // find in stack
     if (!envStack.empty()) {
         auto& env = envStack.top();
         auto it = env.find(name);
@@ -187,7 +179,7 @@ Interpreter::Value Interpreter::getVariable(const std::string& name) {
             return it->second;
         }
     }
-    // не нашли локально – ищем в глобальных
+    // find in globals
     auto it = globals.find(name);
     if (it == globals.end()) {
         runtimeError("Undefined variable: " + name);
@@ -197,10 +189,10 @@ Interpreter::Value Interpreter::getVariable(const std::string& name) {
 
 void Interpreter::setVariable(const std::string& name, Value value) {
     if (envStack.empty()) {
-        // глобальный уровень
+        // global
         globals[name] = value;
     } else {
-        // локальный уровень – кладём в текущее окружение
+        // local
         envStack.top()[name] = value;
     }
 }

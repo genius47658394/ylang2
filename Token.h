@@ -11,7 +11,7 @@
 
 namespace token {
     enum class Keyword {
-        FUNC,
+        FN,
         RETURN,
     };
 
@@ -98,7 +98,7 @@ namespace token {
 
     inline std::ostream& operator<<(std::ostream& os, token::Keyword k) {
         switch (k) {
-            case token::Keyword::FUNC:   return os << "Keyword(FUNC)";
+            case token::Keyword::FN:   return os << "Keyword(FUNC)";
             case token::Keyword::RETURN: return os << "Keyword(RETURN)";
             default:                     return os << "Keyword(?)";
         }
