@@ -1,0 +1,104 @@
+//
+// Created by kucer on 21.02.2026.
+//
+
+#pragma once
+#include <cstdint>
+#include <string>
+#include <variant>
+#include <iostream>
+
+// fn main() {
+//     return 228 + 322;
+// }
+
+namespace token {
+    enum class Keyword {
+        FUNC,
+        RETURN,
+    };
+
+    struct Identifier {
+        std::string value;
+        auto operator<=>(const Identifier &) const = default;
+    };
+
+    struct Integer {
+        int64_t value;
+        auto operator<=>(const Integer &) const = default;
+    };
+
+    struct LPar {
+        auto operator<=>(const LPar &) const = default;
+    };
+
+    struct RPar {
+        auto operator<=>(const RPar &) const = default;
+    };
+
+    struct LBracket {
+        auto operator<=>(const LBracket &) const = default;
+    };
+
+    struct RBracket {
+        auto operator<=>(const RBracket &) const = default;
+    };
+
+    struct Plus {
+        auto operator<=>(const Plus &) const = default;
+    };
+
+    struct Semicolon {
+        auto operator<=>(const Semicolon &) const = default;
+    };
+
+    struct Comma {
+        auto operator<=>(const Comma &) const = default;
+    };
+
+    using Any = std::variant<Keyword, Identifier, Integer, LBracket, RBracket, LPar, RPar, Plus, Semicolon, Comma>;
+
+    inline std::ostream& operator<<(std::ostream& os, const token::LPar&) {
+        return os << "'('";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::RPar&) {
+        return os << "')'";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::LBracket&) {
+        return os << "'{'";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::RBracket&) {
+        return os << "'}'";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::Plus&) {
+        return os << "'+'";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::Semicolon&) {
+        return os << "';'";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::Comma&) {
+        return os << ',';
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::Integer& i) {
+        return os << "Integer(" << i.value << ')';
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, token::Keyword k) {
+        switch (k) {
+            case token::Keyword::FUNC:   return os << "Keyword(FUNC)";
+            case token::Keyword::RETURN: return os << "Keyword(RETURN)";
+            default:                     return os << "Keyword(?)";
+        }
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, const token::Identifier& id) {
+        return os << "Identifier(\"" << id.value << "\")";
+    }
+}
