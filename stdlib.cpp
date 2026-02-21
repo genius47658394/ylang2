@@ -86,4 +86,34 @@ void registerStdLib(Interpreter& interpreter) {
         }
         exit(code);
     });
+
+    interpreter.registerFunction("max", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+        if (args.size() != 2) {
+            throw std::runtime_error("max expects exactly 2 arguments");
+        }
+
+        int64_t a = std::any_cast<int64_t>(args[0]);
+        int64_t b = std::any_cast<int64_t>(args[1]);
+
+        return (a > b) ? a : b;
+    });
+
+    interpreter.registerFunction("random", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+        if (args.size() != 2) {
+            throw std::runtime_error("random expects min and max");
+        }
+        int64_t min = std::any_cast<int64_t>(args[0]);
+        int64_t max = std::any_cast<int64_t>(args[1]);
+
+        return min + (rand() % (max - min + 1));
+    });
+
+    interpreter.registerFunction("len", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+        if (args.size() != 1) {
+            throw std::runtime_error("len expects exactly 1 argument");
+        }
+
+        std::string s = std::any_cast<std::string>(args[0]);
+        return static_cast<int64_t>(s.length());
+    });
 }

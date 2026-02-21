@@ -11,7 +11,7 @@ fn main() {
 
     y = to_int(input());
 
-    z = add(x, y);
+    z = max(x, y);
 
-    println("Answer: ", z);
+    println("The maximum num is: ", z);
 }
