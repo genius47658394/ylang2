@@ -17,23 +17,22 @@ void Interpreter::interpret() {
 }
 
 void Interpreter::visit(ast::Program* prog) {
-    // save all functions as user functions
+    // save functions
     for (auto& func : prog->functions) {
         UserFunction uf;
         uf.func = func.get();
         globals[func->name] = uf;
     }
 
-    // call main
+    for (auto& stmt : prog->globalStatements) {
+        visit(stmt.get());
+    }
+
     auto it = globals.find("main");
-    if (it == globals.end()) {
-        runtimeError("No 'main' function found");
+    if (it != globals.end() && it->second.type() == typeid(UserFunction)) {
+        UserFunction mainFunc = std::any_cast<UserFunction>(it->second);
+        callUserFunction(mainFunc, {});
     }
-    if (it->second.type() != typeid(UserFunction)) {
-        runtimeError("main is not a function");
-    }
-    UserFunction mainFunc = std::any_cast<UserFunction>(it->second);
-    callUserFunction(mainFunc, {});   // void
 }
 
 void Interpreter::visit(ast::Statement* stmt) {

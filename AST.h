@@ -76,6 +76,7 @@ namespace ast {
 
     struct Program {
         std::vector<std::unique_ptr<Function>> functions;
+        std::vector<std::unique_ptr<Statement>> globalStatements;
     };
 
 }

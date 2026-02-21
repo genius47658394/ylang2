@@ -46,10 +46,12 @@ std::unique_ptr<ast::Program> Parser::parse() {
     auto program = std::make_unique<ast::Program>();
 
     while (!isAtEnd()) {
-        if (match(token::Keyword::FN)) {
+        if (check<token::Keyword>() && std::get<token::Keyword>(peek()) == token::Keyword::FN) {
+            advance();
             program->functions.push_back(parseFunction());
         } else {
-            error("Expected function definition");
+            auto stmt = parseStatement();
+            program->globalStatements.push_back(std::move(stmt));
         }
     }
 
@@ -145,7 +147,6 @@ std::unique_ptr<ast::Expression> Parser::parseTerm() {
     if (auto* id = std::get_if<token::Identifier>(&peek())) {
         std::string name = id->value;
         advance();
-        // Если следующий токен '(', то это вызов функции
         if (check<token::LPar>()) {
             return parseCall(name);
         }
@@ -153,7 +154,7 @@ std::unique_ptr<ast::Expression> Parser::parseTerm() {
     }
 
     if (check<token::LPar>()) {
-        advance(); // '('
+        advance();
         auto expr = parseExpression();
         consume<token::RPar>("Expected ')' after expression");
         return expr;
@@ -169,7 +170,6 @@ std::unique_ptr<ast::CallExpr> Parser::parseCall(const std::string& callee) {
     if (!check<token::RPar>()) {
         do {
             args.push_back(parseExpression());
-            // Если есть запятая, продолжаем
             if (check<token::Comma>()) {
                 advance();
             } else {

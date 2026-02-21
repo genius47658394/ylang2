@@ -26,7 +26,6 @@ void registerStdLib(Interpreter& interpreter) {
 
     interpreter.registerFunction("print", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
         for (size_t i = 0; i < args.size(); ++i) {
-            if (i > 0) std::cout << ' ';
             if (args[i].type() == typeid(int64_t)) {
                 std::cout << std::any_cast<int64_t>(args[i]);
             } else if (args[i].type() == typeid(std::string)) {
