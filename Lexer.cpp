@@ -53,9 +53,9 @@ std::vector<token::Any> Lexer::tokenize() {
                     break;
                 }
 
-                if (std::isalpha(*it)) {
+                if (std::isalpha(*it) || *it == '_') {
                     std::string word{};
-                    while (std::isalpha(*it)) {
+                    while (std::isalpha(*it) || *it == '_') {
                         word += *it;
                         ++it;
                     }

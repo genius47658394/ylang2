@@ -53,7 +53,7 @@ void registerStdLib(Interpreter& interpreter) {
     });
 
     // toInt: преобразует строку в целое число
-    interpreter.registerFunction("toint", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+    interpreter.registerFunction("to_int", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
         if (args.size() != 1) {
             throw std::runtime_error("toInt expects exactly one argument");
         }
@@ -77,7 +77,7 @@ void registerStdLib(Interpreter& interpreter) {
     });
 
     // toString: преобразует целое число в строку
-    interpreter.registerFunction("tostring", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+    interpreter.registerFunction("to_string", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
         if (args.size() != 1) {
             throw std::runtime_error("toString expects exactly one argument");
         }
