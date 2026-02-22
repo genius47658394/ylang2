@@ -22,17 +22,14 @@ int main(int argc, char* argv[]) {
     std::string source = buffer.str();
 
     try {
-        // Лексический анализ
         Lexer lexer(source);
         auto tokens = lexer.tokenize();
 
-        // Синтаксический анализ
         Parser parser(tokens);
         auto program = parser.parse();
 
-        // Интерпретация
         Interpreter interpreter(program.get());
-        registerStdLib(interpreter);  // <- регистрируем стандартные функции
+        registerStdLib(interpreter);
         interpreter.interpret();
 
     } catch (const std::exception& e) {
