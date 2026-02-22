@@ -1,0 +1,18 @@
+a = to_int(input("Enter num: "));
+b = to_int(input("Enter num: "));
+op = input("Enter operator: ");
+
+if (op == "+") {
+    print(a + b);
+}
+if (op == "-") {
+    print(a - b);
+}
+if (op == "*") {
+    print(a * b);
+}
+if (op == "/") {
+    print(a / b);
+} else {
+    print("Unknown operator: " + op);
+}

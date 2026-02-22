@@ -54,9 +54,12 @@ private:
     std::unique_ptr<ast::ReturnStatement> parseReturnStatement();
     std::unique_ptr<ast::Expression> parseExpression();
     std::unique_ptr<ast::Expression> parseAdditive();
-    std::unique_ptr<ast::Expression> parseTerm();
+    std::unique_ptr<ast::Expression> parseMultiplicative();
+    std::unique_ptr<ast::Expression> parseFactor();
     std::unique_ptr<ast::CallExpr> parseCall(const std::string& callee);
     std::unique_ptr<ast::AssignStmt> parseAssignStmt();
+    std::unique_ptr<ast::IfStmt> parseIfStmt();
+    std::unique_ptr<ast::Expression> parseComparison();
 };
 
 template<typename T>

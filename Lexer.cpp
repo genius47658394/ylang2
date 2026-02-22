@@ -35,6 +35,15 @@ std::vector<token::Any> Lexer::tokenize() {
             case '+':
                 result.emplace_back(token::Plus{});
                 break;
+            case '-':
+                result.emplace_back(token::Minus{});
+                break;
+            case '*':
+                result.emplace_back(token::Asterisk{});
+                break;
+            case '/':
+                result.emplace_back(token::Slash{});
+                break;
             case ';':
                 result.emplace_back(token::Semicolon{});
                 break;
@@ -42,33 +51,65 @@ std::vector<token::Any> Lexer::tokenize() {
                 result.emplace_back(token::Comma{});
                 break;
             case '=':
-                result.emplace_back(token::Assign{});
-                break;
-                case '"': {
-                    std::string str;
+                if (it + 1 != code.end() && *(it + 1) == '=') {
+                    result.emplace_back(token::Equal{});
                     ++it;
-                    while (it != code.end() && *it != '"') {
-                        if (*it == '\\') {
-                            ++it;
-                            if (it == code.end()) break;
-                            switch (*it) {
-                                case 'n': str += '\n'; break;
-                                case 't': str += '\t'; break;
-                                case '\\': str += '\\'; break;
-                                case '"': str += '"'; break;
-                                default: str += '\\'; str += *it; break;
-                            }
-                        } else {
-                            str += *it;
-                        }
-                        ++it;
-                    }
-                    if (it == code.end() || *it != '"') {
-                        throw std::domain_error("Unterminated string literal");
-                    }
-                    result.emplace_back(token::String{str});
-                    break;
+                } else {
+                    result.emplace_back(token::Assign{});
                 }
+                break;
+
+            case '!':
+                if (it + 1 != code.end() && *(it + 1) == '=') {
+                    result.emplace_back(token::NotEqual{});
+                    ++it;
+                } else {
+                    throw std::domain_error("Unexpected character '!'");
+                }
+                break;
+
+            case '<':
+                if (it + 1 != code.end() && *(it + 1) == '=') {
+                    result.emplace_back(token::LessEqual{});
+                    ++it;
+                } else {
+                    result.emplace_back(token::Less{});
+                }
+                break;
+
+            case '>':
+                if (it + 1 != code.end() && *(it + 1) == '=') {
+                    result.emplace_back(token::GreaterEqual{});
+                    ++it;
+                } else {
+                    result.emplace_back(token::Greater{});
+                }
+                break;
+            case '"': {
+                std::string str;
+                ++it;
+                while (it != code.end() && *it != '"') {
+                    if (*it == '\\') {
+                        ++it;
+                        if (it == code.end()) break;
+                        switch (*it) {
+                            case 'n': str += '\n'; break;
+                            case 't': str += '\t'; break;
+                            case '\\': str += '\\'; break;
+                            case '"': str += '"'; break;
+                            default: str += '\\'; str += *it; break;
+                        }
+                    } else {
+                        str += *it;
+                    }
+                    ++it;
+                }
+                if (it == code.end() || *it != '"') {
+                    throw std::domain_error("Unterminated string literal");
+                }
+                result.emplace_back(token::String{str});
+                break;
+            }
             default:
                 if (std::isdigit(*it)) {
                     std::string int_buff{};
@@ -90,6 +131,8 @@ std::vector<token::Any> Lexer::tokenize() {
                     static std::map<std::string_view, token::Keyword> keywords{
                                 {"fn", token::Keyword::FN},
                                 {"return", token::Keyword::RETURN},
+                                {"if", token::Keyword::IF},
+                                {"else", token::Keyword::ELSE},
                             };
 
                     if (auto keyword = keywords.find(word); keyword != keywords.end()) {

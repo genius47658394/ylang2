@@ -12,6 +12,9 @@ namespace ast {
     // String
     StringLiteral::StringLiteral(std::string v) : value(std::move(v)) {}
 
+    // Boolean
+    Boolean::Boolean(bool v) : value(v) {}
+
     // Identifier
     Identifier::Identifier(std::string n) : name(std::move(n)) {}
 
@@ -30,6 +33,11 @@ namespace ast {
     // ExpressionStatement
     ExpressionStatement::ExpressionStatement(std::unique_ptr<Expression> e)
         : expr(std::move(e)) {}
+
+    IfStmt::IfStmt(std::unique_ptr<Expression> cond,
+                   std::vector<std::unique_ptr<Statement>> thenStmts,
+                   std::vector<std::unique_ptr<Statement>> elseStmts)
+        : condition(std::move(cond)), thenBranch(std::move(thenStmts)), elseBranch(std::move(elseStmts)) {}
 
     // AssignStatement
     AssignStmt::AssignStmt(std::string n, std::unique_ptr<Expression> v)

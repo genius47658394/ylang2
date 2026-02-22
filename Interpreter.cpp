@@ -19,7 +19,7 @@ void Interpreter::interpret() {
 void Interpreter::visit(ast::Program* prog) {
     // save functions
     for (auto& func : prog->functions) {
-        UserFunction uf;
+        UserFunction uf{};
         uf.func = func.get();
         globals[func->name] = uf;
     }
@@ -30,7 +30,7 @@ void Interpreter::visit(ast::Program* prog) {
 
     auto it = globals.find("main");
     if (it != globals.end() && it->second.type() == typeid(UserFunction)) {
-        UserFunction mainFunc = std::any_cast<UserFunction>(it->second);
+        auto mainFunc = std::any_cast<UserFunction>(it->second);
         callUserFunction(mainFunc, {});
     }
 }
@@ -40,8 +40,10 @@ void Interpreter::visit(ast::Statement* stmt) {
         visitReturn(returnStmt);
     } else if (auto* exprStmt = dynamic_cast<ast::ExpressionStatement*>(stmt)) {
         visitExpressionStmt(exprStmt);
-    } else if (auto* assignStmt = dynamic_cast<ast::AssignStmt*>(stmt)) {  // new
+    } else if (auto* assignStmt = dynamic_cast<ast::AssignStmt*>(stmt)) {
         visitAssign(assignStmt);
+    } else if (auto* ifStmt = dynamic_cast<ast::IfStmt*>(stmt)) {
+        visitIf(ifStmt);
     } else {
         runtimeError("Unknown statement type");
     }
@@ -57,11 +59,13 @@ void Interpreter::visitReturn(ast::ReturnStatement* node) {
 
 void Interpreter::visitExpressionStmt(ast::ExpressionStatement* node) {
     Value val = visit(node->expr.get());
-    // Can be ignored or used for degug
-    // Example if it not void can be written
     if (val.has_value()) {
         if (val.type() == typeid(int64_t)) {
-            //std::cout << std::any_cast<int64_t>(val) << std::endl;
+            std::cout << std::any_cast<int64_t>(val) << std::endl;
+        } else if (val.type() == typeid(std::string)) {
+            std::cout << std::any_cast<std::string>(val) << std::endl;
+        } else if (val.type() == typeid(bool)) {
+            std::cout << (std::any_cast<bool>(val) ? "true" : "false") << std::endl;
         }
     }
 }
@@ -70,8 +74,11 @@ Interpreter::Value Interpreter::visit(ast::Expression* expr) {
     if (auto* intNode = dynamic_cast<ast::Integer*>(expr)) {
         return visitInteger(intNode);
     }
-    if (auto* strNode = dynamic_cast<ast::StringLiteral*>(expr)) {  // новый
+    if (auto* strNode = dynamic_cast<ast::StringLiteral*>(expr)) {
         return visitString(strNode);
+    }
+    if (auto* boolNode = dynamic_cast<ast::Boolean*>(expr)) {
+        return visitBoolean(boolNode);
     }
     if (auto* idNode = dynamic_cast<ast::Identifier*>(expr)) {
         return visitIdentifier(idNode);
@@ -97,18 +104,71 @@ Interpreter::Value Interpreter::visitBinaryOp(ast::BinaryOp* node) {
     Value left = visit(node->left.get());
     Value right = visit(node->right.get());
 
-    if (node->op != ast::BinaryOp::Plus) {
-        runtimeError("Unknown binary operator");
+    if (node->op >= ast::BinaryOp::Equal && node->op <= ast::BinaryOp::GreaterEqual) {
+        if (left.type() != right.type()) {
+            runtimeError("Cannot compare values of different types");
+        }
+
+        if (left.type() == typeid(int64_t)) {
+            int64_t l = std::any_cast<int64_t>(left);
+            int64_t r = std::any_cast<int64_t>(right);
+
+            switch (node->op) {
+                case ast::BinaryOp::Equal:        return Value{l == r};
+                case ast::BinaryOp::NotEqual:     return Value{l != r};
+                case ast::BinaryOp::Less:         return Value{l < r};
+                case ast::BinaryOp::LessEqual:    return Value{l <= r};
+                case ast::BinaryOp::Greater:      return Value{l > r};
+                case ast::BinaryOp::GreaterEqual: return Value{l >= r};
+                default: break;
+            }
+        }
+        else if (left.type() == typeid(std::string)) {
+            std::string l = std::any_cast<std::string>(left);
+            std::string r = std::any_cast<std::string>(right);
+
+            switch (node->op) {
+                case ast::BinaryOp::Equal:        return Value{l == r};
+                case ast::BinaryOp::NotEqual:     return Value{l != r};
+                case ast::BinaryOp::Less:         return Value{l < r};
+                case ast::BinaryOp::LessEqual:    return Value{l <= r};
+                case ast::BinaryOp::Greater:      return Value{l > r};
+                case ast::BinaryOp::GreaterEqual: return Value{l >= r};
+                default: break;
+            }
+        }
+        runtimeError("Comparison not supported for this type");
     }
 
-    if (left.type() == typeid(std::string) && right.type() == typeid(std::string)) {
-        return Value{std::any_cast<std::string>(left) + std::any_cast<std::string>(right)};
-    }
-    if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t)) {
-        return Value{std::any_cast<int64_t>(left) + std::any_cast<int64_t>(right)};
-    }
+    switch (node->op) {
+        case ast::BinaryOp::Plus:
+            if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t))
+                return Value{std::any_cast<int64_t>(left) + std::any_cast<int64_t>(right)};
+            if (left.type() == typeid(std::string) && right.type() == typeid(std::string))
+                return Value{std::any_cast<std::string>(left) + std::any_cast<std::string>(right)};
+            runtimeError("'+' only works on numbers or strings");
 
-    runtimeError("Binary '+' only supported for (int, int) or (string, string)");
+        case ast::BinaryOp::Minus:
+            if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t))
+                return Value{std::any_cast<int64_t>(left) - std::any_cast<int64_t>(right)};
+            runtimeError("'-' only works on numbers");
+
+        case ast::BinaryOp::Asterisk:
+            if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t))
+                return Value{std::any_cast<int64_t>(left) * std::any_cast<int64_t>(right)};
+            runtimeError("'*' only works on numbers");
+
+        case ast::BinaryOp::Slash:
+            if (left.type() == typeid(int64_t) && right.type() == typeid(int64_t)) {
+                int64_t r = std::any_cast<int64_t>(right);
+                if (r == 0) runtimeError("Division by zero");
+                return Value{std::any_cast<int64_t>(left) / r};
+            }
+            runtimeError("'/' only works on numbers");
+
+        default:
+            runtimeError("Unknown binary operator");
+    }
 }
 
 Interpreter::Value Interpreter::visitString(ast::StringLiteral* node) {
@@ -132,14 +192,43 @@ Interpreter::Value Interpreter::visitCall(ast::CallExpr* node) {
     }
 
     if (it->second.type() == typeid(NativeFunction)) {
-        NativeFunction func = std::any_cast<NativeFunction>(it->second);
+        auto func = std::any_cast<NativeFunction>(it->second);
         return func(args);
     }
     if (it->second.type() == typeid(UserFunction)) {
-        UserFunction uf = std::any_cast<UserFunction>(it->second);
+        auto uf = std::any_cast<UserFunction>(it->second);
         return callUserFunction(uf, args);
     }
     runtimeError("Not a callable: " + node->callee);
+}
+
+Interpreter::Value Interpreter::visitBoolean(ast::Boolean* node) {
+    return Value{node->value};
+}
+
+void Interpreter::visitIf(ast::IfStmt* node) {
+    Value condVal = visit(node->condition.get());
+
+    bool condition = false;
+    if (condVal.type() == typeid(bool)) {
+        condition = std::any_cast<bool>(condVal);
+    } else if (condVal.type() == typeid(int64_t)) {
+        condition = (std::any_cast<int64_t>(condVal) != 0);
+    } else if (condVal.type() == typeid(std::string)) {
+        condition = !std::any_cast<std::string>(condVal).empty();
+    } else {
+        runtimeError("Condition must evaluate to a boolean or convertible type");
+    }
+
+    if (condition) {
+        for (auto& stmt : node->thenBranch) {
+            visit(stmt.get());
+        }
+    } else {
+        for (auto& stmt : node->elseBranch) {
+            visit(stmt.get());
+        }
+    }
 }
 
 Interpreter::Value Interpreter::callUserFunction(UserFunction& uf, const std::vector<Value>& args) {

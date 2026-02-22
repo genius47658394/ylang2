@@ -90,11 +90,12 @@ std::unique_ptr<ast::Statement> Parser::parseStatement() {
     if (match(token::Keyword::RETURN)) {
         return parseReturnStatement();
     }
-
+    if (match(token::Keyword::IF)) {
+        return parseIfStmt();
+    }
     if (check<token::Identifier>() && lookaheadIsAssign()) {
         return parseAssignStmt();
     }
-
     auto expr = parseExpression();
     consume<token::Semicolon>("Expected ';' after expression");
     return std::make_unique<ast::ExpressionStatement>(std::move(expr));
@@ -111,27 +112,123 @@ std::unique_ptr<ast::ReturnStatement> Parser::parseReturnStatement() {
     return std::make_unique<ast::ReturnStatement>(std::move(expr));
 }
 
-std::unique_ptr<ast::Expression> Parser::parseExpression() {
-    return parseAdditive();
+std::unique_ptr<ast::IfStmt> Parser::parseIfStmt() {
+    consume<token::LPar>("Expected '(' after if");
+    auto condition = parseExpression();
+    consume<token::RPar>("Expected ')' after condition");
+    consume<token::LBracket>("Expected '{' before if body");
+
+    std::vector<std::unique_ptr<ast::Statement>> thenBranch;
+    while (!check<token::RBracket>() && !isAtEnd()) {
+        thenBranch.push_back(parseStatement());
+    }
+    consume<token::RBracket>("Expected '}' after if body");
+
+    std::vector<std::unique_ptr<ast::Statement>> elseBranch;
+    if (match(token::Keyword::ELSE)) {
+        consume<token::LBracket>("Expected '{' before else body");
+        while (!check<token::RBracket>() && !isAtEnd()) {
+            elseBranch.push_back(parseStatement());
+        }
+        consume<token::RBracket>("Expected '}' after else body");
+    }
+
+    return std::make_unique<ast::IfStmt>(std::move(condition), std::move(thenBranch), std::move(elseBranch));
 }
 
-std::unique_ptr<ast::Expression> Parser::parseAdditive() {
-    auto left = parseTerm();
+std::unique_ptr<ast::Expression> Parser::parseExpression() {
+    return parseComparison();
+}
 
-    while (check<token::Plus>()) {
-        advance(); // съедаем '+'
-        auto right = parseTerm();
-        left = std::make_unique<ast::BinaryOp>(
-            ast::BinaryOp::Plus,
-            std::move(left),
-            std::move(right)
-        );
+std::unique_ptr<ast::Expression> Parser::parseComparison() {
+    auto left = parseAdditive();
+
+    while (true) {
+        if (check<token::Equal>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Equal, std::move(left), std::move(right));
+        }
+        else if (check<token::NotEqual>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::NotEqual, std::move(left), std::move(right));
+        }
+        else if (check<token::Less>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Less, std::move(left), std::move(right));
+        }
+        else if (check<token::LessEqual>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::LessEqual, std::move(left), std::move(right));
+        }
+        else if (check<token::Greater>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Greater, std::move(left), std::move(right));
+        }
+        else if (check<token::GreaterEqual>()) {
+            advance();
+            auto right = parseAdditive();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::GreaterEqual, std::move(left), std::move(right));
+        }
+        else {
+            break;
+        }
     }
 
     return left;
 }
 
-std::unique_ptr<ast::Expression> Parser::parseTerm() {
+std::unique_ptr<ast::Expression> Parser::parseAdditive() {
+    auto left = parseMultiplicative();
+
+    while (true) {
+        if (check<token::Plus>()) {
+            advance();
+            auto right = parseMultiplicative();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Plus,
+                                                    std::move(left),
+                                                    std::move(right));
+        } else if (check<token::Minus>()) {
+            advance();
+            auto right = parseMultiplicative();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Minus,
+                                                    std::move(left),
+                                                    std::move(right));
+        } else {
+            break;
+        }
+    }
+    return left;
+}
+
+std::unique_ptr<ast::Expression> Parser::parseMultiplicative() {
+    auto left = parseFactor();
+
+    while (true) {
+        if (check<token::Asterisk>()) {
+            advance();
+            auto right = parseFactor();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Asterisk,
+                                                    std::move(left),
+                                                    std::move(right));
+        } else if (check<token::Slash>()) {
+            advance();
+            auto right = parseFactor();
+            left = std::make_unique<ast::BinaryOp>(ast::BinaryOp::Slash,
+                                                    std::move(left),
+                                                    std::move(right));
+        } else {
+            break;
+        }
+    }
+    return left;
+}
+
+std::unique_ptr<ast::Expression> Parser::parseFactor() {
     if (auto* intVal = std::get_if<token::Integer>(&peek())) {
         auto value = intVal->value;
         advance();

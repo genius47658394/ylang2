@@ -39,11 +39,20 @@ void registerStdLib(Interpreter& interpreter) {
         return {};
     });
 
-    interpreter.registerFunction("input", [](const std::vector<Interpreter::Value>&) -> Interpreter::Value {
-        std::string line;
-        std::getline(std::cin, line);
-        return line;
-    });
+    interpreter.registerFunction("input", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
+    if (args.size() > 0) {
+        if (args[0].type() == typeid(std::string)) {
+            std::cout << std::any_cast<std::string>(args[0]);
+        } else if (args[0].type() == typeid(int64_t)) {
+            std::cout << std::any_cast<int64_t>(args[0]);
+        } else {
+            std::cout << "<unknown>";
+        }
+    }
+    std::string line;
+    std::getline(std::cin, line);
+    return line;
+});
 
     interpreter.registerFunction("to_int", [](const std::vector<Interpreter::Value>& args) -> Interpreter::Value {
         if (args.size() != 1) {

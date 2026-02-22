@@ -13,6 +13,8 @@ namespace token {
     enum class Keyword {
         FN,
         RETURN,
+        IF,
+        ELSE,
     };
 
     struct Identifier {
@@ -50,6 +52,18 @@ namespace token {
         auto operator<=>(const Plus &) const = default;
     };
 
+    struct Minus {
+        auto operator<=>(const Minus &) const = default;
+    };
+
+    struct Asterisk {
+        auto operator<=>(const Asterisk &) const = default;
+    };
+
+    struct Slash {
+        auto operator<=>(const Slash &) const = default;
+    };
+
     struct Assign {
         auto operator<=>(const Assign &) const = default;
     };
@@ -62,7 +76,33 @@ namespace token {
         auto operator<=>(const Comma &) const = default;
     };
 
-    using Any = std::variant<Keyword, Identifier, Integer, LBracket, RBracket, LPar, RPar, Plus, Semicolon, Comma, String, Assign>;
+    struct Equal {
+        auto operator<=>(const Equal &) const = default;
+    };
+
+    struct NotEqual {
+        auto operator<=>(const NotEqual &) const = default;
+    };
+
+    struct Less {
+        auto operator<=>(const Less &) const = default;
+    };
+
+    struct LessEqual {
+        auto operator<=>(const LessEqual &) const = default;
+    };
+
+    struct Greater {
+        auto operator<=>(const Greater &) const = default;
+    };
+
+    struct GreaterEqual {
+        auto operator<=>(const GreaterEqual &) const = default;
+    };
+
+    using Any = std::variant<Keyword, Identifier, Integer, LBracket, RBracket, LPar,
+    RPar, Plus, Semicolon, Comma, String, Assign, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual,
+    Minus, Asterisk, Slash>;
 
     inline std::ostream& operator<<(std::ostream& os, const token::LPar&) {
         return os << "'('";

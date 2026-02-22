@@ -44,11 +44,13 @@ private:
     Value visitInteger(ast::Integer* node);
     Value visitIdentifier(ast::Identifier* node);
     Value visitBinaryOp(ast::BinaryOp* node);
-    Value visitCall(ast::CallExpr* node);  // новый
+    Value visitCall(ast::CallExpr* node);  // new
     void visitReturn(ast::ReturnStatement* node);
     void visitExpressionStmt(ast::ExpressionStatement* node);
     Value visitString(ast::StringLiteral* node);
     void visitAssign(ast::AssignStmt* node);
+    Value visitBoolean(ast::Boolean* node);
+    void visitIf(ast::IfStmt* node);
 
     Value callUserFunction(UserFunction& uf, const std::vector<Value>& args);
 

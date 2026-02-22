@@ -30,8 +30,13 @@ namespace ast {
         explicit StringLiteral(std::string v);
     };
 
+    struct Boolean : Expression {
+        bool value;
+        explicit Boolean(bool v);
+    };
+
     struct BinaryOp : Expression {
-        enum Op { Plus };
+        enum Op { Plus, Minus, Asterisk, Slash, Equal, NotEqual, Less, LessEqual, Greater, GreaterEqual, };
         Op op;
         std::unique_ptr<Expression> left;
         std::unique_ptr<Expression> right;
@@ -64,6 +69,16 @@ namespace ast {
         std::string name;
         std::unique_ptr<Expression> value;
         AssignStmt(std::string n, std::unique_ptr<Expression> v);
+    };
+
+    struct IfStmt : Statement {
+        std::unique_ptr<Expression> condition;
+        std::vector<std::unique_ptr<Statement>> thenBranch;
+        std::vector<std::unique_ptr<Statement>> elseBranch;
+
+        IfStmt(std::unique_ptr<Expression> cond,
+               std::vector<std::unique_ptr<Statement>> thenStmts,
+               std::vector<std::unique_ptr<Statement>> elseStmts = {});
     };
 
     struct Function {
